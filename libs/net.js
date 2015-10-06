@@ -20,6 +20,8 @@
             port: NetWork.wsPort
         });
 
+        Logger.info('WS Server ws://0.0.0.0:' + NetWork.wsPort + ' started!');
+
         Wss.on('connection', function (ws) {
             Logger.log('[Net] Новое подключение от', ws._socket.remoteAddress);
             Monitor.save('Net', 'connection', ++connectionsCounter);

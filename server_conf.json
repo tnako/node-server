@@ -1,5 +1,7 @@
 {
     "logFileName": null,
+    "workerDir": "./worker/",
+    "activeWorkers": [],
     "numCPUs": 1,
     "NetWork": {
         "wsPort": 5555

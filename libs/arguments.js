@@ -27,6 +27,10 @@
         });
         */
 
+        parser.addArgument(['-c', '--conf'], {
+            help: 'Config file path, by default "./server_conf.json"'
+        });
+
         parser.addArgument(['-w', '--wsPort'], {
             help: 'Порт для WebSockets, по умолчанию 8052'
         });
@@ -61,39 +65,43 @@
 
         args = parser.parseArgs();
 
-        if (args.server !== null) {
+        if (args.conf !== undefined && args.conf !== null) {
+            conf_path = args.conf;
+        }
+
+        if (args.server !== undefined && args.server !== null) {
             POSServer.NetWork.host = args.server;
         }
 
-        if (args.wsPort !== null) {
+        if (args.wsPort !== undefined && args.wsPort !== null) {
             POSServer.NetWork.wsPort = args.wsPort;
         }
 
-        if (args.logFileName !== null) {
+        if (args.logFileName !== undefined && args.logFileName !== null) {
             POSServer.logFileName = args.logFile;
         }
 
-        if (args.numCPUs !== null) {
+        if (args.numCPUs !== undefined && args.numCPUs !== null) {
             POSServer.numCPUs = args.numCPUs;
         }
 
-        if (args.SQL_host !== null) {
+        if (args.SQL_host !== undefined && args.SQL_host !== null) {
             POSServer.MariaServer.host = args.SQL_host;
         }
 
-        if (args.SQL_limit !== null) {
+        if (args.SQL_limit !== undefined && args.SQL_limit !== null) {
             POSServer.MariaServer.connectionLimit = args.SQL_limit;
         }
 
-        if (args.SQL_user !== null) {
+        if (args.SQL_user !== undefined && args.SQL_user !== null) {
             POSServer.MariaServer.user = args.SQL_user;
         }
 
-        if (args.SQL_password !== null) {
+        if (args.SQL_password !== undefined && args.SQL_password !== null) {
             POSServer.MariaServer.password = args.SQL_password;
         }
 
-        if (args.SQL_database !== null) {
+        if (args.SQL_database !== undefined && args.SQL_database !== null) {
             POSServer.MariaServer.database = args.SQL_database;
         }
     }
@@ -103,10 +111,14 @@
     }
 
     function loadConfig(POSServer) {
-        if (fs.existsSync(conf_path)) {
-            POSServer = JSON.parse(fs.readFileSync(conf_path));
+        if (fs.statSync(conf_path).isFile()) {
+            var conf_data = JSON.parse(fs.readFileSync(conf_path));
+            for (var prop in conf_data) {
+                POSServer[prop] = conf_data[prop];
+            }
+        } else {
+            Logger.warn("[Args] No conf file", conf_path);
         }
-        return POSServer;
     }
 
     Args.checkArguments = checkArguments;

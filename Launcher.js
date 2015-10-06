@@ -10,11 +10,9 @@
         Net       = require('./libs/net'),
         cluster   = require('cluster'),
         os        = require('os'),
-        version   = 'v15.10',
-        CHServer = Args.loadConfig(),
+        CHServer = {version: 'v15.10'},
         workers   = {};
 
-    workers['name']      = null;
 
     function exit() {
         process.exit(0);
@@ -31,8 +29,8 @@
     }
 
     function launch(i) {
-        Object.keys(workers).forEach(function(key) {
-            workers[key] = require('./worker/' + key);
+        CHServer.activeWorkers.forEach(function(key) {
+            workers[key] = require(CHServer.workerDir + key);
             workers[key].init(CHServer);
         });
 
@@ -83,9 +81,9 @@
     exports.launch = launch;
     exports.exit = exit;
 
-    CHServer = Args.loadConfig(CHServer);
-    CHServer.version = version;
     Args.checkArguments(CHServer);
+    Args.loadConfig(CHServer);
+    console.log(CHServer);
 
     process.on("uncaughtException", uncaughtExceptionHandler);
     process.on('exit', function(code) {
@@ -106,26 +104,29 @@
         exit();
     });
 
-    var i = -1;
-    if (cluster.isMaster) {
-        var params = { };
-        var wCount = CHServer.numCPUs;
-
-        for (i = 1; i <= wCount; i++) {
-            params['WORKER_ID'] = i;
-            cluster.fork(params);
-        }
-
-        cluster.on('exit', function(worker, code, signal) {
-            Logger.warn('[Launcher] worker ' + worker.process.pid + ' died');
-            var worker = cluster.fork(process.env);
-
-            // Note the process IDs
-            var newPid = worker.process.pid;
-            Logger.info('[Launcher] worker ' + newPid + ' created');
-        });
+    if (CHServer.numCPUs < 2) {
+      launch(0);
     } else {
-        launch(i);
+      if (cluster.isMaster) {
+          var params = { };
+          var wCount = CHServer.numCPUs;
+
+          for (var i = 1; i <= wCount; i++) {
+              params['WORKER_ID'] = i;
+              cluster.fork(params);
+          }
+
+          cluster.on('exit', function(worker, code, signal) {
+              Logger.warn('[Launcher] worker ' + worker.process.pid + ' died');
+              var worker = cluster.fork(process.env);
+
+              // Note the process IDs
+              var newPid = worker.process.pid;
+              Logger.info('[Launcher] worker ' + newPid + ' created');
+          });
+      } else {
+          launch(i);
+      }
     }
 
 }());
