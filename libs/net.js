@@ -30,7 +30,7 @@
                     message = JSON.parse(message);
                 } catch (e) {
                     Net.send(ws, JSON.stringify({
-                        name: "Net",
+                        name: 'Net',
                         action: 'error',
                         data: 101
                     }));
@@ -44,6 +44,10 @@
 
                 message.ip = ws._socket.remoteAddress;
                 message.ws = ws;
+
+                if (message.ws.appdata === undefined) {
+                  message.ws.appdata = {};
+                }
 
                 Net.emit('request', message);
             });
@@ -75,7 +79,7 @@
 
     function sendError(ws, name, code) {
         if (ws.readyState === 1) {
-          if (code === undefined) code = 101;
+          if (code === undefined) code = 100;
           ws.send(JSON.stringify({
               name: name,
               action: 'error',
