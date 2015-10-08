@@ -1,16 +1,17 @@
 {
-    "logFileName": null,
-    "workerDir": "./worker/",
-    "activeWorkers": [],
-    "numCPUs": 1,
-    "NetWork": {
-        "wsPort": 5555
-    },
-    "MariaServer": {
-        "connectionLimit": 5,
-        "host": "127.0.0.1",
-        "user": "root",
-        "password": "",
-        "database": ""
-    }
+  "ApplicationName": "Some Server",
+  "logFileName": null,
+  "workerDir": "./worker/",
+  "activeWorkers": [],
+  "numCPUs": 1,
+  "NetWork": {
+    "wsPort": 5555
+  },
+  "MariaServer": {
+    "connectionLimit": 5,
+    "host": "127.0.0.1",
+    "user": "root",
+    "password": "",
+    "database": ""
+  }
 }
