@@ -1,5 +1,4 @@
 {
-  "ApplicationName": "Some Server",
   "logFileName": null,
   "workerDir": "./worker/",
   "activeWorkers": [],
