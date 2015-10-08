@@ -9,7 +9,7 @@
         Monitor = module.exports,
         data = {};
 
-    var query = "INSERT IGNORE INTO `monitoring` (`dttm`, `programm`, `worker`, `type`, `function`, `maxValue`, `minValue`, `counter`, `sumValue`) VALUES (NOW(), 'Challenge', ?, ?, ?, ?, ?, ?, ?);";
+    var query = "INSERT IGNORE INTO `monitoring` (`dttm`, `programm`, `worker`, `type`, `function`, `maxValue`, `minValue`, `counter`, `sumValue`) VALUES (NOW(), 'Some Server', ?, ?, ?, ?, ?, ?, ?);";
 
     function save(func, action, value) {
         if (data[func] === undefined) {
@@ -58,10 +58,8 @@
                         if (data[type][func].minValue != data[type][func].minValue) {
                             data[type][func].minValue = 0;
                         }
-                        var workerId = cluster.worker.id
-                        if (!workerId) {
-                            workerId = 0;
-                        }
+                        var workerId = (cluster.worker === undefined || cluster.worker === null ? 0 : cluster.worker.id);
+
                         var params = [
                             workerId,
                             type,

@@ -47,16 +47,6 @@
                 return;
             }
 
-            if (!message.ws.pos_model && message.name != "Hello") {
-                Logger.warn('[Launcher] Нету функции (login fail)', message.name);
-                Net.send(message.ws, JSON.stringify({
-                    name: message.name,
-                    action: 'error',
-                    data: 401
-                }));
-                return;
-            }
-
             var action = workers[message.name][message.action];
 
             if (action === undefined) {
@@ -83,7 +73,6 @@
 
     Args.checkArguments(CHServer);
     Args.loadConfig(CHServer);
-    console.log(CHServer);
 
     process.on("uncaughtException", uncaughtExceptionHandler);
     process.on('exit', function(code) {
