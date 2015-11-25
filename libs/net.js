@@ -23,7 +23,7 @@
     Logger.info('WS Server ws://0.0.0.0:' + NetWork.wsPort + ' started!');
 
     Wss.on('connection', function(ws) {
-      Logger.log('[Net] Новое подключение от', ws._socket.remoteAddress);
+      Logger.log('[Net] ' + ws._socket.remoteAddress + ' New connection');
       Monitor.save('Net', 'connection', ++connectionsCounter);
       ws.on('message', function(message) {
         try {
@@ -61,7 +61,7 @@
       });
       ws.on('close', function(reasonCode, description) {
         var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address : '';
-        Logger.log('[Net] ' + addr + ' отключился.', reasonCode, description);
+        Logger.log('[Net] ' + addr + ' disconnected.', reasonCode, description);
         Monitor.save('Net', 'close', --connectionsCounter); // ToDo: get all current connections
       });
     }).on('error', function(error) {
