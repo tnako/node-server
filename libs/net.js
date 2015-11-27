@@ -13,7 +13,8 @@
 
 
   function makeIPstr(ws) {
-    var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address + ':' + message.ws._socket._peername.port : '';
+    var addr = ws._socket.remoteAddress + ':' + ws._socket.remotePort;
+//    var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address + ':' + ws._socket._peername.port : '';
     return addr
   }
 
@@ -30,6 +31,7 @@
     Wss.on('connection', function(ws) {
       Logger.log('[Net] ' + makeIPstr(ws) + ' New connection');
       Monitor.save('Net', 'connection', ++connectionsCounter);
+      ws.ipp = makeIPstr(ws);
       ws.on('message', function(message) {
         try {
           message = JSON.parse(message);
@@ -42,7 +44,6 @@
           return;
         }
 
-        message.ipp = makeIPstr(ws);
         message.ws = ws;
 
         if (!message.name || !message.action) {
