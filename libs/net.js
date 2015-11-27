@@ -12,6 +12,11 @@
     connectionsCounter = 0;
 
 
+  function makeIPstr(ws) {
+    var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address + ':' + message.ws._socket._peername.port : '';
+    return addr
+  }
+
   function start(POSServer) {
     var NetWork = POSServer.NetWork;
 
@@ -23,7 +28,7 @@
     Logger.info('WS Server ws://0.0.0.0:' + NetWork.wsPort + ' started!');
 
     Wss.on('connection', function(ws) {
-      Logger.log('[Net] ' + ws._socket.remoteAddress + ' New connection');
+      Logger.log('[Net] ' + makeIPstr(ws) + ' New connection');
       Monitor.save('Net', 'connection', ++connectionsCounter);
       ws.on('message', function(message) {
         try {
@@ -37,7 +42,7 @@
           return;
         }
 
-        message.ip = ws._socket.remoteAddress;
+        message.ipp = makeIPstr(ws);
         message.ws = ws;
 
         if (!message.name || !message.action) {
@@ -60,8 +65,7 @@
         Logger.warn('[Net] ошибка ws', e);
       });
       ws.on('close', function(reasonCode, description) {
-        var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address : '';
-        Logger.log('[Net] ' + addr + ' disconnected.', reasonCode, description);
+        Logger.log('[Net] ' + makeIPstr(ws) + ' disconnected.', reasonCode, description);
         Monitor.save('Net', 'close', --connectionsCounter); // ToDo: get all current connections
       });
     }).on('error', function(error) {
