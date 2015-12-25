@@ -8,25 +8,31 @@
     Net = module.exports = new EventEmitter(),
     WebSocketServer = require('ws').Server,
     Monitor = require('./monitoring'),
+    http = require('http'),
     Wss,
     connectionsCounter = 0;
 
 
+  // ToDo:
+  // разнести http и ws в разные прототипы
+
   function makeIPstr(ws) {
     var addr = ws._socket.remoteAddress + ':' + ws._socket.remotePort;
-//    var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address + ':' + ws._socket._peername.port : '';
+    //    var addr = (ws._socket && ws._socket._peername && ws._socket._peername != undefined) ? ws._socket._peername.address + ':' + ws._socket._peername.port : '';
     return addr
   }
 
-  function start(POSServer) {
-    var NetWork = POSServer.NetWork;
+  function makeIPstrhttp(socket) {
+    return socket.remoteAddress + ':' + socket.remotePort
+  }
 
+  function _initWS(port) {
     // start ws server
     Wss = new WebSocketServer({
-      port: NetWork.wsPort
+      port: port
     });
 
-    Logger.info('WS Server ws://0.0.0.0:' + NetWork.wsPort + ' started!');
+    Logger.info('WS Server ws://0.0.0.0:' + port + ' started!');
 
     Wss.on('connection', function(ws) {
       Logger.log('[Net] ' + makeIPstr(ws) + ' New connection');
@@ -72,7 +78,75 @@
     }).on('error', function(error) {
       Logger.error('[Net] WebSocketServer error:', error);
     });
+  }
 
+  function _initHTTP(port) {
+
+    var server = http.createServer().listen(port);
+    Logger.info('HTTP Server http://0.0.0.0:' + port + ' started!');
+
+    server.on('error', function(e) {
+      Logger.error('[http] Server error:', e);
+    });
+
+    server.on('connection', function(socket) {
+      Logger.log('[http] ' + makeIPstrhttp(socket) + ' New connection');
+      Monitor.save('http', 'connection', ++connectionsCounter);
+      socket.ipp = makeIPstrhttp(socket);
+
+      server.on('close', function() {
+        Logger.log('[http] ' + socket.ipp + ' disconnected.');
+        Monitor.save('http', 'close', --connectionsCounter);
+      });
+
+      server.on('request', function(request, response) {
+        var body = ''
+        request.on('data', function(data) {
+          body += data
+        });
+        request.on('end', function() {
+          try {
+            message = JSON.parse(body);
+          } catch (e) {
+            response.writeHead(401, {
+              'Content-Type': 'text/html'
+            });
+            response.end();
+            return
+          }
+          message.response = response;
+
+          if (!message.name || !message.action) {
+            Logger.warn('[http] Неизвестное сообщение', message);
+            return;
+          }
+
+          if (message.action == 'init') {
+            Logger.warn('[http] Somebody want to init worker', message);
+            return;
+          }
+
+          if (message.response.appdata === undefined) {
+            message.response.appdata = {};
+          }
+
+          Net.emit('request', message);
+        });
+      });
+
+    })
+  }
+
+  function start(POSServer) {
+    var NetWork = POSServer.NetWork;
+
+    if (NetWork.wsPort !== undefined && parseInt(NetWork.wsPort) > 0) {
+      _initWS(parseInt(NetWork.wsPort));
+    }
+
+    if (NetWork.httpPort !== undefined && parseInt(NetWork.httpPort) > 0) {
+      _initHTTP(parseInt(NetWork.httpPort));
+    }
   }
 
   function send(ws, message, binary) {

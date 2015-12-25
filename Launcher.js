@@ -11,7 +11,7 @@
     cluster = require('cluster'),
     os = require('os'),
     CHServer = {
-      version: 'v15.10'
+      version: 'v16.01'
     },
     workers = {};
 
