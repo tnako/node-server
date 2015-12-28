@@ -94,47 +94,50 @@
       Monitor.save('http', 'connection', ++connectionsCounter);
       socket.ipp = makeIPstrhttp(socket);
 
-      server.on('close', function() {
-        Logger.log('[http] ' + socket.ipp + ' disconnected.');
+      socket.on('close', function() {
+        Logger.log('[http] ' + makeIPstrhttp(socket) + ' disconnected.');
         Monitor.save('http', 'close', --connectionsCounter);
       });
 
-      server.on('request', function(request, response) {
-        var body = ''
-        request.on('data', function(data) {
-          body += data
-        });
-        request.on('end', function() {
-          try {
-            message = JSON.parse(body);
-          } catch (e) {
-            response.writeHead(401, {
-              'Content-Type': 'text/html'
-            });
-            response.end();
-            return
-          }
-          message.response = response;
-
-          if (!message.name || !message.action) {
-            Logger.warn('[http] Неизвестное сообщение', message);
-            return;
-          }
-
-          if (message.action == 'init') {
-            Logger.warn('[http] Somebody want to init worker', message);
-            return;
-          }
-
-          if (message.response.appdata === undefined) {
-            message.response.appdata = {};
-          }
-
-          Net.emit('request', message);
-        });
-      });
-
     })
+
+    server.on('request', function(request, response) {
+      var body = ''
+      request.on('data', function(data) {
+        body += data
+      });
+      request.on('end', function() {
+        try {
+          //Logger.info("dsdss", body)
+          var message = JSON.parse(body);
+        } catch (e) {
+
+          response.writeHead(401, {
+            'Content-Type': 'text/html'
+          });
+          response.end();
+          return
+        }
+
+        message.ws = response
+
+        if (!message.name || !message.action) {
+          Logger.warn('[http] Неизвестное сообщение', message);
+          return;
+        }
+
+        if (message.action == 'init') {
+          Logger.warn('[http] Somebody want to init worker', message);
+          return;
+        }
+
+        if (message.ws.appdata === undefined) {
+          message.ws.appdata = {};
+        }
+
+        Net.emit('request', message);
+      });
+    });
   }
 
   function start(POSServer) {
@@ -159,17 +162,32 @@
       } else {
         ws.send(message);
       }
+    } else if (ws.writeHead !== undefined) {
+      ws.writeHead(200, {
+        'Content-Type': 'application/json'
+      });
+      ws.write(message)
+      ws.end();
     }
   }
 
   function sendError(ws, name, code) {
+    if (code === undefined) code = 100;
+
+    var buf_send = JSON.stringify({
+      name: name,
+      action: 'error',
+      data: code
+    });
+
     if (ws.readyState === 1) {
-      if (code === undefined) code = 100;
-      ws.send(JSON.stringify({
-        name: name,
-        action: 'error',
-        data: code
-      }));
+      ws.send(buf_send)
+    } else if (ws.response !== undefined) {
+      ws.response.writeHead(code, {
+        'Content-Type': 'application/json'
+      });
+      ws.response.write(buf_send)
+      ws.response.end();
     }
   }
 
