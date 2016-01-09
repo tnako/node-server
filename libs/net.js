@@ -88,19 +88,19 @@
     server.on('error', function(e) {
       Logger.error('[http] Server error:', e);
     });
-
+/*
     server.on('connection', function(socket) {
-      Logger.log('[http] ' + makeIPstrhttp(socket) + ' New connection');
-      Monitor.save('http', 'connection', ++connectionsCounter);
       socket.ipp = makeIPstrhttp(socket);
+      Logger.log('[http] ' + socket.ipp + ' New connection');
+      Monitor.save('http', 'connection', ++connectionsCounter);
 
       socket.on('close', function() {
-        Logger.log('[http] ' + makeIPstrhttp(socket) + ' disconnected.');
+        Logger.log('[http] ' + socket.ipp + ' disconnected.');
         Monitor.save('http', 'close', --connectionsCounter);
       });
 
     })
-
+*/
     server.on('request', function(request, response) {
       var body = ''
       request.on('data', function(data) {
